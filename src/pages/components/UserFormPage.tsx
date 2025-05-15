@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  fetchUser, clearCurrent, editUser, addUser 
+  fetchUser,
+  clearCurrent,
+  editUser,
+  addUser
 } from '../../features/users/usersSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import Spinner from '../../components/Spinner';
 import type { CreateUserDTO, UpdateUserDTO } from '../../types/users';
 import { ErrorText, FormContainer, FormGroup, Label, Input, ButtonGroup, Button } from '../styles/UserFormStyles';
 
-type FormState = Partial<CreateUserDTO> & Partial<UpdateUserDTO> & { id?: number };
+type FormState = Partial<CreateUserDTO> &
+  Partial<UpdateUserDTO> & { id?: number };
 
 export default function UserFormPage() {
   const dispatch = useAppDispatch();
@@ -21,14 +25,17 @@ export default function UserFormPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  // Carrega o usuário ou reseta o form
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchUser(+id));
-    else {
+    if (isEdit && id) {
+      dispatch(fetchUser(+id));
+    } else {
       dispatch(clearCurrent());
       setForm({});
     }
   }, [dispatch, id, isEdit]);
 
+  // Preenche o form com os dados existentes (sem senha)
   useEffect(() => {
     if (current) {
       setForm({
@@ -44,7 +51,9 @@ export default function UserFormPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    if (name === 'password') setPasswordError('');
+    if (name === 'password') {
+      setPasswordError('');
+    }
   };
 
   const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +64,7 @@ export default function UserFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validações de senha apenas no create
     if (!isEdit) {
       if (!form.password || form.password.length < 6) {
         setPasswordError('Password must be at least 6 characters');
@@ -67,7 +77,9 @@ export default function UserFormPage() {
     }
 
     if (isEdit && form.id != null) {
-      dispatch(editUser({ id: form.id, data: form as UpdateUserDTO }))
+      // Remove o id do payload para não mandar no body
+      const { id: userId, ...payload } = form as UpdateUserDTO & { id: number };
+      dispatch(editUser({ id: userId, data: payload }))
         .then(() => navigate('/users'));
     } else {
       dispatch(addUser(form as CreateUserDTO))
@@ -157,7 +169,11 @@ export default function UserFormPage() {
           <Button type="submit" variant="primary">
             {isEdit ? 'Save' : 'Create'}
           </Button>
-          <Button type="button" variant="secondary" onClick={() => navigate('/users')}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/users')}
+          >
             Cancel
           </Button>
         </ButtonGroup>
