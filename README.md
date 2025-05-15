@@ -1,46 +1,137 @@
-# Getting Started with Create React App
+# User Management Front-End
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este projeto é o front-end de um sistema de gerenciamento de usuários, consumindo a API RESTful do back-end. Implementado em React + TypeScript com Redux Toolkit, React Router e styled-components.
 
-## Available Scripts
+## 📦 Tecnologias
 
-In the project directory, you can run:
+- React (Create React App + TypeScript)
+- Redux Toolkit + React-Redux
+- React Router v6
+- Axios
+- styled-components (CSS-in-JS)
+- Proxy de desenvolvimento (package.json)
 
-### `yarn start`
+## 🚀 Como rodar localmente
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Clone este repositório e entre na pasta:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```bash
+git clone <url-do-front>
+cd user-management-front
+```
 
-### `yarn test`
+Instale as dependências:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+yarn install
+```
 
-### `yarn build`
+Garanta que o back-end esteja rodando em `http://localhost:3000` (com CRUD e relatórios).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Inicie o front-end:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+yarn start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+O servidor de desenvolvimento abre em `http://localhost:3000` e usa o proxy para encaminhar `/users` e `/reports` à API.
 
-### `yarn eject`
+## 🗂 Estrutura de Pastas
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+src/
+├─ api/                     
+│   ├─ user.ts              # wrappers Axios para /users  
+│   └─ report.ts            # wrappers Axios para /users/reports  
+│
+├─ app/                     
+│   ├─ store.ts             # configuração Redux Toolkit  
+│   └─ hooks.ts             # useAppDispatch, useAppSelector  
+│
+├─ features/                
+│   ├─ users/               
+│   │  ├─ types.ts          # DTOs/interfaces de User  
+│   │  └─ usersSlice.ts     # slice + thunks de usuários  
+│   └─ reports/             
+│      ├─ types.ts          # DTOs de relatório  
+│      └─ reportsSlice.ts   # slice + thunks de relatórios  
+│
+├─ pages/                   
+│   ├─ UserListPage/        
+│   │  ├─ UserListPage.tsx  
+│   │  └─ styles.ts         # styled-components da listagem  
+│   ├─ UserFormPage/        
+│   │  ├─ UserFormPage.tsx  
+│   │  └─ styles.ts         # styled-components do formulário  
+│   └─ ReportPage/          
+│      ├─ ReportPage.tsx    
+│      └─ styles.ts         # styled-components do relatório  
+│
+├─ components/              
+│   └─ Spinner.tsx          # componente de loading  
+│
+├─ routes/                  
+│   └─ AppRoutes.tsx        # definição de rotas React Router  
+│
+├─ styles/                  
+│   └─ global.css           # resets e variáveis globais (opcional)  
+│
+├─ index.tsx                
+└─ App.tsx                  
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔄 Fluxos de Uso
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+**Listagem de Usuários**
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- Chama `GET /users`
+- Ações: Editar (`/users/:id`) ou Excluir
+- Botão New User leva ao formulário de criação
 
-## Learn More
+**Formulário de Usuário**
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Create (`POST /users`): coleta `name`, `email`, `password`, `documentNumber`, `birthDate`
+- Edit (`PUT /users/:id`): carrega dados existentes, permite alterar (sem senha)
+- Inclui confirmação de senha no cadastro
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Relatórios**
+
+- `GET /users/reports/count` → Total de usuários
+- `GET /users/reports/by-month` → Usuários agrupados por mês
+
+## ⚙️ Configuração de Proxy
+
+No `package.json`, adicione:
+
+```jsonc
+"proxy": "http://localhost:3000"
+```
+
+Isso permite usar chamadas como `axios.get('/users')` sem especificar host/back.
+
+## 🖌️ Estilização
+
+Páginas usam styled-components centralizados em `src/styles/`.
+
+Cada página importa seu arquivo de estilos:
+- `UserFormPage/styles.ts`
+- `UserListPage/styles.ts`
+- `ReportPage/styles.ts`
+
+## 🧪 Testes
+
+Este front não inclui testes por padrão, mas você pode adicionar:
+- React Testing Library para testes de componentes e fluxos.
+- Jest para mocks e cobertura de código.
+
+## 📜 Licença
+
+Este projeto é UNLICENSED. Use-o livremente para fins de estudo ou teste.
+
+## 👍 Próximos Passos / Bônus
+
+- Paginação na listagem de usuários.
+- Busca e filtragem na tabela.
+- Exportação de relatórios (CSV, Excel).
+- Área de login com JWT.
+- Upload de avatar de usuário.
