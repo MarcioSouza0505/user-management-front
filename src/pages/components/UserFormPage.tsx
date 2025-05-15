@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
+import {
   fetchUser,
   clearCurrent,
   editUser,
-  addUser
+  addUser,
 } from '../../features/users/usersSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import Spinner from '../../components/Spinner';
-import type { CreateUserDTO, UpdateUserDTO } from '../../types/users';
-import { ErrorText, FormContainer, FormGroup, Label, Input, ButtonGroup, Button } from '../styles/UserFormStyles';
+import Spinner from '../../components/Spinner/Spinner';
+import { CreateUserDTO, UpdateUserDTO } from '../../types/users';
+import { ErrorText, FormContainer, Button, FormGroup, Label, Input, ButtonGroup } from '../styles/UserFormStyles';
 
-type FormState = Partial<CreateUserDTO> &
-  Partial<UpdateUserDTO> & { id?: number };
+
+type FormState = Partial<CreateUserDTO> & Partial<UpdateUserDTO> & { id?: number };
 
 export default function UserFormPage() {
   const dispatch = useAppDispatch();
@@ -25,17 +25,14 @@ export default function UserFormPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // Carrega o usuário ou reseta o form
   useEffect(() => {
-    if (isEdit && id) {
-      dispatch(fetchUser(+id));
-    } else {
+    if (isEdit && id) dispatch(fetchUser(+id));
+    else {
       dispatch(clearCurrent());
       setForm({});
     }
   }, [dispatch, id, isEdit]);
 
-  // Preenche o form com os dados existentes (sem senha)
   useEffect(() => {
     if (current) {
       setForm({
@@ -51,9 +48,7 @@ export default function UserFormPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    if (name === 'password') {
-      setPasswordError('');
-    }
+    if (name === 'password') setPasswordError('');
   };
 
   const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,20 +59,18 @@ export default function UserFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validações de senha apenas no create
     if (!isEdit) {
       if (!form.password || form.password.length < 6) {
-        setPasswordError('Password must be at least 6 characters');
+        setPasswordError('A senha deve ter ao menos 6 caracteres');
         return;
       }
       if (form.password !== confirmPassword) {
-        setPasswordError("Passwords don't match");
+        setPasswordError('As senhas não coincidem');
         return;
       }
     }
 
     if (isEdit && form.id != null) {
-      // Remove o id do payload para não mandar no body
       const { id: userId, ...payload } = form as UpdateUserDTO & { id: number };
       dispatch(editUser({ id: userId, data: payload }))
         .then(() => navigate('/users'));
@@ -87,15 +80,26 @@ export default function UserFormPage() {
     }
   };
 
-  if (loading) return <Spinner />;
-  if (error) return <ErrorText>Error: {error}</ErrorText>;
+  const showSpinner = loading;
+
+  if (showSpinner) return <Spinner />;
+  if (error) return <ErrorText>Erro: {error}</ErrorText>;
 
   return (
     <FormContainer>
-      <h1>{isEdit ? 'Edit User' : 'New User'}</h1>
+      {/* Botão Voltar */}
+      <Button
+        variant="secondary"
+        onClick={() => navigate('/users')}
+        style={{ marginBottom: '1rem' }}
+      >
+        Voltar
+      </Button>
+
+      <h1>{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</h1>
       <form onSubmit={handleSubmit}>
         <FormGroup>
-          <Label>Name</Label>
+          <Label>Nome</Label>
           <Input
             name="name"
             value={form.name ?? ''}
@@ -105,7 +109,7 @@ export default function UserFormPage() {
         </FormGroup>
 
         <FormGroup>
-          <Label>Email</Label>
+          <Label>E-mail</Label>
           <Input
             name="email"
             type="email"
@@ -118,7 +122,7 @@ export default function UserFormPage() {
         {!isEdit && (
           <>
             <FormGroup>
-              <Label>Password</Label>
+              <Label>Senha</Label>
               <Input
                 name="password"
                 type="password"
@@ -130,7 +134,7 @@ export default function UserFormPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Confirm Password</Label>
+              <Label>Confirme a Senha</Label>
               <Input
                 name="confirmPassword"
                 type="password"
@@ -145,7 +149,7 @@ export default function UserFormPage() {
         )}
 
         <FormGroup>
-          <Label>Document Number</Label>
+          <Label>Documento</Label>
           <Input
             name="documentNumber"
             value={form.documentNumber ?? ''}
@@ -155,7 +159,7 @@ export default function UserFormPage() {
         </FormGroup>
 
         <FormGroup>
-          <Label>Birth Date</Label>
+          <Label>Data de Nascimento</Label>
           <Input
             name="birthDate"
             type="date"
@@ -167,14 +171,14 @@ export default function UserFormPage() {
 
         <ButtonGroup>
           <Button type="submit" variant="primary">
-            {isEdit ? 'Save' : 'Create'}
+            {isEdit ? 'Salvar' : 'Criar'}
           </Button>
           <Button
             type="button"
             variant="secondary"
             onClick={() => navigate('/users')}
           >
-            Cancel
+            Cancelar
           </Button>
         </ButtonGroup>
       </form>
