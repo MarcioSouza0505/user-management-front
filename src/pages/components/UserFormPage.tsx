@@ -1,4 +1,6 @@
+// src/pages/components/UserFormPage.tsx
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   fetchUser,
@@ -8,31 +10,42 @@ import {
 } from '../../features/users/usersSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import Spinner from '../../components/Spinner/Spinner';
-import { CreateUserDTO, UpdateUserDTO } from '../../types/users';
-import { ErrorText, FormContainer, Button, FormGroup, Label, Input, ButtonGroup } from '../styles/UserFormStyles';
+import type { CreateUserDTO, UpdateUserDTO } from '../../types/users';
+import {
+  ErrorText,
+  FormContainer,
+  Button,
+  FormGroup,
+  Label,
+  Input,
+  ButtonGroup,
+} from '../styles/UserFormStyles';
 
-
-type FormState = Partial<CreateUserDTO> & Partial<UpdateUserDTO> & { id?: number };
+type FormState = Partial<CreateUserDTO> &
+  Partial<UpdateUserDTO> & { id?: number };
 
 export default function UserFormPage() {
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
-  const { current, loading, error } = useAppSelector(s => s.users);
+  const { current, loading, error } = useAppSelector((s) => s.users);
   const navigate = useNavigate();
 
   const [form, setForm] = useState<FormState>({});
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  // busca ou limpa o usuário ao montar
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchUser(+id));
-    else {
+    if (isEdit && id) {
+      dispatch(fetchUser(+id));
+    } else {
       dispatch(clearCurrent());
       setForm({});
     }
   }, [dispatch, id, isEdit]);
 
+  // quando current muda, preenche o form (sem senha)
   useEffect(() => {
     if (current) {
       setForm({
@@ -45,9 +58,16 @@ export default function UserFormPage() {
     }
   }, [current]);
 
+  // dispara toast sempre que houver erro de slice
+  useEffect(() => {
+    if (error) {
+      toast.error(error, { autoClose: 3000 });
+    }
+  }, [error]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (name === 'password') setPasswordError('');
   };
 
@@ -59,6 +79,7 @@ export default function UserFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // validação de senha no create
     if (!isEdit) {
       if (!form.password || form.password.length < 6) {
         setPasswordError('A senha deve ter ao menos 6 caracteres');
@@ -71,23 +92,24 @@ export default function UserFormPage() {
     }
 
     if (isEdit && form.id != null) {
-      const { id: userId, ...payload } = form as UpdateUserDTO & { id: number };
-      dispatch(editUser({ id: userId, data: payload }))
-        .then(() => navigate('/users'));
+      // remove o id do payload antes de enviar
+      const { id: _, ...payload } = form;
+      dispatch(editUser({ id: form.id, data: payload as UpdateUserDTO }))
+        .unwrap()
+        .then(() => navigate('/users'))
+        .catch((msg) => toast.error(msg));
     } else {
       dispatch(addUser(form as CreateUserDTO))
-        .then(() => navigate('/users'));
+        .unwrap()
+        .then(() => navigate('/users'))
+        .catch((msg) => toast.error(msg));
     }
   };
 
-  const showSpinner = loading;
-
-  if (showSpinner) return <Spinner />;
-  if (error) return <ErrorText>Erro: {error}</ErrorText>;
+  if (loading) return <Spinner />;
 
   return (
     <FormContainer>
-      {/* Botão Voltar */}
       <Button
         variant="secondary"
         onClick={() => navigate('/users')}
@@ -129,7 +151,6 @@ export default function UserFormPage() {
                 value={form.password ?? ''}
                 onChange={handleChange}
                 required
-                minLength={6}
               />
             </FormGroup>
 
